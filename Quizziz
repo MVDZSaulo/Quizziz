@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz sobre Maquiavel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .progress-bar {
+            height: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .option.selected {
+            background-color: #7e22ce;
+            color: white;
+            border-color: #7e22ce;
+        }
+        
+        .option.correct {
+            background-color: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        
+        .option.incorrect {
+            background-color: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-purple-50 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-12 max-w-3xl">
+        <!-- Header -->
+        <header class="text-center mb-12 fade-in">
+            <h1 class="text-4xl font-bold text-purple-900 mb-2">Quiz Maquiavel</h1>
+            <p class="text-purple-700">Teste seus conhecimentos sobre Nicolau Maquiavel e sua obra</p>
+            <div class="w-24 h-1 bg-purple-500 mx-auto mt-4 rounded-full"></div>
+        </header>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+            <!-- Progress Bar -->
+            <div class="bg-purple-100 h-2">
+                <div id="progress-bar" class="progress-bar bg-purple-600" style="width: 0%"></div>
+            </div>
+
+            <!-- Question Container -->
+            <div id="question-container" class="p-8">
+                <div id="question-number" class="text-purple-500 font-semibold mb-2">Pergunta 1 de 3</div>
+                <h2 id="question-text" class="text-2xl font-bold text-gray-800 mb-8"></h2>
+                
+                <div id="options-container" class="space-y-4">
+                    <!-- Options will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between p-6 bg-purple-50">
+                <button id="prev-btn" class="px-6 py-2 text-purple-700 font-medium rounded-lg hover:bg-purple-100 transition hidden">
+                    <i class="fas fa-arrow-left mr-2"></i> Anterior
+                </button>
+                <button id="next-btn" class="px-6 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition ml-auto">
+                    Próxima <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                <button id="submit-btn" class="px-6 py-2 bg-purple-800 text-white font-medium rounded-lg hover:bg-purple-900 transition hidden">
+                    Ver Resultado <i class="fas fa-trophy ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container" class="bg-white rounded-xl shadow-lg p-8 text-center hidden fade-in">
+            <div class="text-5xl text-purple-600 mb-4">
+                <i class="fas fa-award"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-purple-900 mb-4">Quiz Concluído!</h2>
+            <p id="score-text" class="text-xl text-gray-700 mb-6">Você acertou <span class="font-bold text-purple-600">X</span> de <span class="font-bold">3</span> perguntas</p>
+            <div class="w-full bg-purple-100 rounded-full h-4 mb-8">
+                <div id="score-bar" class="bg-purple-600 h-4 rounded-full" style="width: 0%"></div>
+            </div>
+            <button id="restart-btn" class="px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-redo mr-2"></i> Refazer Quiz
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Quiz questions
+            const questions = [
+                {
+                    question: "Qual é a obra mais famosa de Maquiavel?",
+                    options: [
+                        "O Príncipe",
+                        "A República",
+                        "Leviatã",
+                        "O Contrato Social"
+                    ],
+                    correctAnswer: 0
+                },
+                {
+                    question: "Segundo Maquiavel, o que é mais importante para um governante manter o poder?",
+                    options: [
+                        "Ser amado pelo povo",
+                        "Ser temido pelo povo",
+                        "Ser visto como virtuoso",
+                        "Manter promessas acima de tudo"
+                    ],
+                    correctAnswer: 1
+                },
+                {
+                    question: "Qual era a posição política de Maquiavel em Florença?",
+                    options: [
+                        "Rei",
+                        "Diplomata e funcionário público",
+                        "General do exército",
+                        "Líder religioso"
+                    ],
+                    correctAnswer: 1
+                }
+            ];
+
+            // DOM elements
+            const quizContainer = document.getElementById('quiz-container');
+            const questionContainer = document.getElementById('question-container');
+            const questionNumber = document.getElementById('question-number');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const progressBar = document.getElementById('progress-bar');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const scoreText = document.getElementById('score-text');
+            const scoreBar = document.getElementById('score-bar');
+            const restartBtn = document.getElementById('restart-btn');
+
+            // Quiz state
+            let currentQuestion = 0;
+            let selectedAnswers = Array(questions.length).fill(null);
+            let score = 0;
+
+            // Initialize quiz
+            function initQuiz() {
+                currentQuestion = 0;
+                selectedAnswers = Array(questions.length).fill(null);
+                score = 0;
+                showQuestion();
+                updateNavigation();
+                quizContainer.classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+            }
+
+            // Show current question
+            function showQuestion() {
+                const question = questions[currentQuestion];
+                
+                questionNumber.textContent = `Pergunta ${currentQuestion + 1} de ${questions.length}`;
+                questionText.textContent = question.question;
+                
+                // Update progress bar
+                progressBar.style.width = `${((currentQuestion) / questions.length) * 100}%`;
+                
+                // Clear previous options
+                optionsContainer.innerHTML = '';
+                
+                // Add new options
+                question.options.forEach((option, index) => {
+                    const optionElement = document.createElement('button');
+                    optionElement.className = 'option w-full text-left p-4 border-2 border-purple-200 rounded-lg transition hover:shadow-md';
+                    optionElement.textContent = option;
+                    
+                    // Check if this option was previously selected
+                    if (selectedAnswers[currentQuestion] === index) {
+                        optionElement.classList.add('selected');
+                    }
+                    
+                    optionElement.addEventListener('click', () => selectOption(index));
+                    optionsContainer.appendChild(optionElement);
+                });
+            }
+
+            // Select an option
+            function selectOption(optionIndex) {
+                // Remove selected class from all options
+                const options = document.querySelectorAll('.option');
+                options.forEach(option => option.classList.remove('selected'));
+                
+                // Add selected class to clicked option
+                options[optionIndex].classList.add('selected');
+                
+                // Store the selected answer
+                selectedAnswers[currentQuestion] = optionIndex;
+                
+                // Enable next button
+                nextBtn.disabled = false;
+            }
+
+            // Update navigation buttons
+            function updateNavigation() {
+                // Previous button
+                if (currentQuestion === 0) {
+                    prevBtn.classList.add('hidden');
+                } else {
+                    prevBtn.classList.remove('hidden');
+                }
+                
+                // Next/Submit button
+                if (currentQuestion === questions.length - 1) {
+                    nextBtn.classList.add('hidden');
+                    submitBtn.classList.remove('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    submitBtn.classList.add('hidden');
+                }
+                
+                // Disable next if no option selected (except when going back)
+                nextBtn.disabled = selectedAnswers[currentQuestion] === null;
+            }
+
+            // Show next question
+            function nextQuestion() {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    showQuestion();
+                    updateNavigation();
+                }
+            }
+
+            // Show previous question
+            function prevQuestion() {
+                if (currentQuestion > 0) {
+                    currentQuestion--;
+                    showQuestion();
+                    updateNavigation();
+                }
+            }
+
+            // Submit quiz and show results
+            function submitQuiz() {
+                // Calculate score
+                score = 0;
+                selectedAnswers.forEach((answer, index) => {
+                    if (answer === questions[index].correctAnswer) {
+                        score++;
+                    }
+                });
+                
+                // Show results
+                quizContainer.classList.add('hidden');
+                resultsContainer.classList.remove('hidden');
+                
+                // Update results text
+                scoreText.innerHTML = `Você acertou <span class="font-bold text-purple-600">${score}</span> de <span class="font-bold">${questions.length}</span> perguntas`;
+                
+                // Update results bar
+                const percentage = (score / questions.length) * 100;
+                setTimeout(() => {
+                    scoreBar.style.width = `${percentage}%`;
+                }, 100);
+            }
+
+            // Event listeners
+            nextBtn.addEventListener('click', nextQuestion);
+            prevBtn.addEventListener('click', prevQuestion);
+            submitBtn.addEventListener('click', submitQuiz);
+            restartBtn.addEventListener('click', initQuiz);
+
+            // Start the quiz
+            initQuiz();
+        });
+    </script>
+</body>
+</html>
